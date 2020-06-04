@@ -9,7 +9,7 @@ FROM ${FROM_IMAGE}:${CUDA_VERSION}-${CUDA_TYPE}-${LINUX_VERSION}
 # Define arguments
 ARG CUDA_VER
 ARG PYTHON_VERSION
-ARG LIB_NG_VERSION=7.3.0
+ARG LIB_NG_VERSION=7.5.0
 
 # Set environment
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/lib
@@ -22,7 +22,7 @@ ADD .condarc /conda/.condarc
 RUN source activate base \
     && conda create --no-default-packages --override-channels -n rapids \
       -c nvidia \
-      -c conda-forge/label/cf202003 \
+      -c conda-forge \
       -c defaults \
       nomkl \
       cudatoolkit=${CUDA_VER} \
