@@ -22,7 +22,7 @@ ADD .condarc /conda/.condarc
 RUN source activate base \
     && conda create --no-default-packages --override-channels -n rapids \
       -c nvidia \
-      -c conda-forge \
+      -c conda-forge\label\cf202003 \
       -c defaults \
       nomkl \
       cudatoolkit=${CUDA_VER} \
