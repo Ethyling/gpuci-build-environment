@@ -109,20 +109,29 @@ RUN gpuci_retry wget --quiet ${CENTOS7_GCC7_URL} -O /gcc7.tgz \
     && tar xzvf /gcc7.tgz \
     && rm -f /gcc7.tgz
 
- # Install CMake
-RUN curl -fsSLO --compressed "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz" \
- && tar -xvzf cmake-$CMAKE_VERSION.tar.gz && cd cmake-$CMAKE_VERSION \
- && ./bootstrap --system-curl --parallel=${PARALLEL_LEVEL} && make install -j${PARALLEL_LEVEL} \
- && cd - && rm -rf ./cmake-$CMAKE_VERSION ./cmake-$CMAKE_VERSION.tar.gz \
- # Install ccache
- && git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
- && git checkout -b rapids-compose-tmp e071bcfd37dfb02b4f1fa4b45fff8feb10d1cbd2 \
- && mkdir -p /tmp/ccache/build && cd /tmp/ccache/build \
- && cmake \
-    -DENABLE_TESTING=OFF \
-    -DUSE_LIBB2_FROM_INTERNET=ON \
-    -DUSE_LIBZSTD_FROM_INTERNET=ON .. \
- && make ccache -j${PARALLEL_LEVEL} && make install && cd / && rm -rf ./ccache-${CCACHE_VERSION}*
+RUN git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
+ && git checkout -b rapids-compose-tmp b1fcfbca224b2af5b6499794edd8615dbc3dc7b5 \
+ && ./autogen.sh \
+ && ./configure --disable-man --with-libb2-from-internet --with-libzstd-from-internet\
+ && make install -j \
+ && cd / \
+ && rm -rf /tmp/ccache-${CCACHE_VERSION}* \
+ && mkdir -p /ccache
+
+#  # Install CMake
+# RUN curl -fsSLO --compressed "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz" \
+#  && tar -xvzf cmake-$CMAKE_VERSION.tar.gz && cd cmake-$CMAKE_VERSION \
+#  && ./bootstrap --system-curl --parallel=${PARALLEL_LEVEL} && make install -j${PARALLEL_LEVEL} \
+#  && cd - && rm -rf ./cmake-$CMAKE_VERSION ./cmake-$CMAKE_VERSION.tar.gz \
+#  # Install ccache
+#  && git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
+#  && git checkout -b rapids-compose-tmp e071bcfd37dfb02b4f1fa4b45fff8feb10d1cbd2 \
+#  && mkdir -p /tmp/ccache/build && cd /tmp/ccache/build \
+#  && cmake \
+#     -DENABLE_TESTING=OFF \
+#     -DUSE_LIBB2_FROM_INTERNET=ON \
+#     -DUSE_LIBZSTD_FROM_INTERNET=ON .. \
+#  && make ccache -j${PARALLEL_LEVEL} && make install && cd / && rm -rf ./ccache-${CCACHE_VERSION}*
 
 
 # Setup ccache env vars
