@@ -133,13 +133,13 @@ ENV CCACHE_DIR="/ccache"
 ENV CCACHE_COMPILERCHECK="%compiler% --version"
 
 # Uncomment these env vars to force ccache to be enabled by default
-ENV CC="/usr/local/bin/gcc"
-ENV CXX="/usr/local/bin/g++"
-ENV NVCC="/usr/local/bin/nvcc"
-ENV CUDAHOSTCXX="/usr/local/bin/g++"
-RUN ln -s "$(which ccache)" "/usr/local/bin/gcc" \
-    && ln -s "$(which ccache)" "/usr/local/bin/g++" \
-    && ln -s "$(which ccache)" "/usr/local/bin/nvcc"
+# ENV CC="/usr/local/bin/gcc"
+# ENV CXX="/usr/local/bin/g++"
+# ENV NVCC="/usr/local/bin/nvcc"
+# ENV CUDAHOSTCXX="/usr/local/bin/g++"
+# RUN ln -s "$(which ccache)" "/usr/local/bin/gcc" \
+#     && ln -s "$(which ccache)" "/usr/local/bin/g++" \
+#     && ln -s "$(which ccache)" "/usr/local/bin/nvcc"
 
 # Clean up pkgs to reduce image size and chmod for all users
 RUN conda clean -afy \
