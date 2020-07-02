@@ -76,6 +76,7 @@ RUN apt-get update -y --fix-missing \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+<<<<<<< HEAD
 # # Install latest awscli
 # RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
 #     && unzip awscliv2.zip \
@@ -142,6 +143,65 @@ RUN git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache
 #     -DUSE_LIBB2_FROM_INTERNET=ON \
 #     -DUSE_LIBZSTD_FROM_INTERNET=ON .. \
 #  && make ccache -j${PARALLEL_LEVEL} && make install && cd / && rm -rf ./ccache-${CCACHE_VERSION}*
+=======
+# Install latest awscli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf ./aws ./awscliv2.zip
+
+# Add core tools to base env
+RUN source activate base \
+    && conda install -y --override-channels -c gpuci gpuci-tools \
+    && gpuci_retry conda install -y \
+      anaconda-client \
+      codecov
+
+# Create `rapids` conda env and make default
+RUN source activate base \
+    && gpuci_retry conda create --no-default-packages --override-channels -n rapids \
+      -c nvidia \
+      -c conda-forge \
+      -c defaults \
+      nomkl \
+      cudatoolkit=${CUDA_VER} \
+      git \
+      libgcc-ng=${BUILD_STACK_VER} \
+      libstdcxx-ng=${BUILD_STACK_VER} \
+      python=${PYTHON_VER} \
+    && sed -i 's/conda activate base/conda activate rapids/g' ~/.bashrc
+
+# Create symlink for old scripts expecting `gdf` conda env
+RUN ln -s /opt/conda/envs/rapids /opt/conda/envs/gdf
+
+# Install build/doc/notebook env meta-pkgs
+#
+# Once installed remove the meta-pkg so dependencies can be freely updated &
+# the meta-pkg can be installed again with updates
+RUN gpuci_retry conda install -y -n rapids --freeze-installed \
+      rapids-build-env=${RAPIDS_VER} \
+      rapids-doc-env=${RAPIDS_VER} \
+      rapids-notebook-env=${RAPIDS_VER} \
+    && conda remove -y -n rapids --force-remove \
+      rapids-build-env=${RAPIDS_VER} \
+      rapids-doc-env=${RAPIDS_VER} \
+      rapids-notebook-env=${RAPIDS_VER}
+
+ # Install CMake
+RUN curl -fsSLO --compressed "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz" \
+ && tar -xvzf cmake-$CMAKE_VERSION.tar.gz && cd cmake-$CMAKE_VERSION \
+ && ./bootstrap --system-curl --parallel=${PARALLEL_LEVEL} && make install -j${PARALLEL_LEVEL} \
+ && cd - && rm -rf ./cmake-$CMAKE_VERSION ./cmake-$CMAKE_VERSION.tar.gz \
+ # Install ccache from specific commit in ccache's master branch
+ && git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
+ && git checkout -b rapids-compose-tmp e071bcfd37dfb02b4f1fa4b45fff8feb10d1cbd2 \
+ && mkdir -p /tmp/ccache/build && cd /tmp/ccache/build \
+ && cmake \
+    -DENABLE_TESTING=OFF \
+    -DUSE_LIBB2_FROM_INTERNET=ON \
+    -DUSE_LIBZSTD_FROM_INTERNET=ON .. \
+ && make ccache -j${PARALLEL_LEVEL} && make install && cd / && rm -rf ./ccache-${CCACHE_VERSION}*
+>>>>>>> 057a2fc30cbe1164aadad01257f7cbb691737170
 
 # Setup ccache env vars
 ENV CCACHE_NOHASHDIR=
