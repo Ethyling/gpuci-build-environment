@@ -11,8 +11,6 @@ ARG PYTHON_VER=3.6
 ARG BUILD_STACK_VER=7.5.0
 ARG CENTOS7_GCC7_URL=https://gpuci.s3.us-east-2.amazonaws.com/builds/gcc7.tgz
 ARG CCACHE_VERSION=master
-ARG PARALLEL_LEVEL=16
-ARG CMAKE_VERSION=3.17.2
 
 # Capture argument used for FROM
 ARG CUDA_VER
@@ -108,6 +106,8 @@ RUN gpuci_retry wget --quiet ${CENTOS7_GCC7_URL} -O /gcc7.tgz \
     && tar xzvf /gcc7.tgz \
     && rm -f /gcc7.tgz
 
+# Build Ccache from source, must use main branch from ccache repo
+# Uses a specific commit hash to use the version before ccache introduced cmake (breaks builds)
 RUN git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
  && git checkout -b rapids-compose-tmp b1fcfbca224b2af5b6499794edd8615dbc3dc7b5 \
  && ./autogen.sh \

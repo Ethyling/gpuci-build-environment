@@ -11,8 +11,6 @@ ARG PYTHON_VER=3.6
 # Optional arguments
 ARG BUILD_STACK_VER=7.5.0
 ARG CCACHE_VERSION=master
-ARG PARALLEL_LEVEL=16
-ARG CMAKE_VERSION=3.17.2
 
 # Capture argument used for FROM
 ARG CUDA_VER
@@ -118,7 +116,8 @@ RUN gpuci_retry conda install -y -n rapids --freeze-installed \
       rapids-doc-env=${RAPIDS_VER} \
       rapids-notebook-env=${RAPIDS_VER}
 
-# Build Ccache from source, 
+# Build Ccache from source, must use main branch from ccache repo
+# Uses a specific commit hash to use the version before ccache introduced cmake (breaks builds)
 RUN git clone https://github.com/ccache/ccache.git /tmp/ccache && cd /tmp/ccache \
  && git checkout -b pre-cmake-branch b1fcfbca224b2af5b6499794edd8615dbc3dc7b5 \
  && ./autogen.sh \
