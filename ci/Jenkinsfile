@@ -3,14 +3,28 @@ pipeline {
     node {
       label 'runner'
     }
-
   }
   stages {
-    stage('Build miniconda-cuda') {
+    stage('env check') {
       steps {
-        build(wait: true, propagate: true, job: 'gpuci/gpuci-build-environment/miniconda-cuda')
+        env
       }
     }
-
+    stage('miniconda-cuda Test Build') {
+      steps {
+        build(
+          job: 'gpuci/gpuci-build-environment/miniconda-cuda-test-build',
+          wait: true,
+          propagate: true,
+          parameters: [
+            string(name: 'PR_ID', value: env.prId),
+            string(name: 'REPORT_HASH', value: env.reportHash),
+            string(name: 'COMMIT_HASH', value: env.commitHash),
+            string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+            string(name: 'TARGET_BRANCH', value: env.targetBranch)
+          ]
+        )
+      }
+    }
   }
 }
