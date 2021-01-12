@@ -1,10 +1,16 @@
 pipeline {
-    agent any
-    stages { 
-        stage('Example') {
-            steps {
-                echo 'Hello World'
-            }
-        }
+  agent {
+    node {
+      label 'runner'
     }
+
+  }
+  stages {
+    stage('Build miniconda-cuda') {
+      steps {
+        build(wait: true, propagate: true, job: 'gpuci/gpuci-build-environment/miniconda-cuda')
+      }
+    }
+
+  }
 }
