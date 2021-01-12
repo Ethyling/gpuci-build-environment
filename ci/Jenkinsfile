@@ -1,0 +1,93 @@
+/*
+ * gpuCI PR testing pipeline
+ */
+env['prId'] = env['ghprbPullId']
+env['sourceBranch'] = env['ghprbSourceBranch']
+env['targetBranch'] = env['ghprbTargetBranch']
+env['commitHash'] = env['sha1']
+env['reportHash'] = env['ghprbActualCommit']
+env['prAuthor'] = env['ghprbPullAuthorLogin']
+
+def ghStatusStart(context, description, targetUrl){
+    def (account, repo) = env.ghprbGhRepository.tokenize('/')
+    githubNotify account: account, context: context, credentialsId: 'gputester-username-api-token', description: description, repo: repo, sha: env.reportHash, status: 'PENDING', targetUrl: targetUrl
+}
+
+def ghStatusDone(context, description, status, targetUrl){
+    def (account, repo) = env.ghprbGhRepository.tokenize('/')
+    githubNotify account: account, context: context, credentialsId: 'gputester-username-api-token', description: description, repo: repo, sha: env.reportHash, status: status, targetUrl: targetUrl
+}
+
+def reportJobResult(context, jobBuild){
+  def jobResult = jobBuild.getResult()
+  def jobUrl = jobBuild.getAbsoluteUrl()
+  echo "${context} job finished with result: ${jobResult}"
+  if (jobResult != 'SUCCESS') {
+    ghStatusDone(context, 'Build failure/error', 'FAILURE', jobUrl)
+    //error("${context} job failed with result: ${jobResult}")
+  } else {
+    ghStatusDone(context, 'Build success', 'SUCCESS', jobUrl)
+  }
+}
+
+ghStatusStart('gpuCI/build/pr-builder','Running','')
+parallel miniconda_cuda: {
+    stage('miniconda-cuda Test Build') {
+      ghStatusStart('gpuCI/build/miniconda-cuda','Queued','')
+      def jobBuild = build job: 'miniconda-cuda-test-build', parameters: [
+          string(name: 'PR_ID', value: env.prId),
+          string(name: 'REPORT_HASH', value: env.reportHash),
+          string(name: 'COMMIT_HASH', value: env.commitHash),
+          string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+          string(name: 'TARGET_BRANCH', value: env.targetBranch)
+        ], propagate: false
+      reportJobResult('gpuCI/build/miniconda-cuda', jobBuild)
+    }
+}, miniforge_cuda: {
+    stage('miniforge-cuda Test Build') {
+      ghStatusStart('gpuCI/build/miniforge-cuda','Queued','')
+      def jobBuild = build job: 'miniforge-cuda-test-build', parameters: [
+          string(name: 'PR_ID', value: env.prId),
+          string(name: 'REPORT_HASH', value: env.reportHash),
+          string(name: 'COMMIT_HASH', value: env.commitHash),
+          string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+          string(name: 'TARGET_BRANCH', value: env.targetBranch)
+        ], propagate: false
+      reportJobResult('gpuCI/build/miniforge-cuda', jobBuild)
+    }
+},
+failFast: false
+
+stage('miniconda-cuda-driver Test Build') {
+  ghStatusStart('gpuCI/build/miniconda-cuda-driver','Queued','')
+  def jobBuild = build job: 'miniconda-cuda-driver-test-build', parameters: [
+      string(name: 'PR_ID', value: env.prId),
+      string(name: 'REPORT_HASH', value: env.reportHash),
+      string(name: 'COMMIT_HASH', value: env.commitHash),
+      string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+      string(name: 'TARGET_BRANCH', value: env.targetBranch)
+    ], propagate: false
+  reportJobResult('gpuCI/build/miniconda-cuda-driver', jobBuild)
+}
+stage('rapidsai Test Build') {
+  ghStatusStart('gpuCI/build/rapidsai','Queued','')
+  def jobBuild = build job: 'rapidsai-test-build', parameters: [
+      string(name: 'PR_ID', value: env.prId),
+      string(name: 'REPORT_HASH', value: env.reportHash),
+      string(name: 'COMMIT_HASH', value: env.commitHash),
+      string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+      string(name: 'TARGET_BRANCH', value: env.targetBranch)
+    ], propagate: false
+  reportJobResult('gpuCI/build/rapidsai', jobBuild)
+}
+stage('rapidsai-driver Test Build') {
+  ghStatusStart('gpuCI/build/rapidsai-driver','Queued','')
+  def jobBuild = build job: 'rapidsai-driver-test-build', parameters: [
+      string(name: 'PR_ID', value: env.prId),
+      string(name: 'REPORT_HASH', value: env.reportHash),
+      string(name: 'COMMIT_HASH', value: env.commitHash),
+      string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
+      string(name: 'TARGET_BRANCH', value: env.targetBranch)
+    ], propagate: false
+  reportJobResult('gpuCI/build/rapidsai-driver', jobBuild)
+}
