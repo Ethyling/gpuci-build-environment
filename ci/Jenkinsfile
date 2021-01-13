@@ -7,7 +7,7 @@ pipeline {
   stages {
     stage('env check') {
       steps {
-        env
+        sh 'env'
       }
     }
     stage('miniconda-cuda Test Build') {
