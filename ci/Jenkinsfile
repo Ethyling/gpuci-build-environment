@@ -10,20 +10,38 @@ pipeline {
         sh 'env'
       }
     }
-    stage('miniconda-cuda Test Build') {
-      steps {
-        build(
-          job: 'gpuci/gpuci-build-environment/miniconda-cuda-test-build',
-          wait: true,
-          propagate: true,
-          parameters: [
-            string(name: 'PR_ID', value: env.prId),
-            string(name: 'REPORT_HASH', value: env.reportHash),
-            string(name: 'COMMIT_HASH', value: env.commitHash),
-            string(name: 'SOURCE_BRANCH', value: env.sourceBranch),
-            string(name: 'TARGET_BRANCH', value: env.targetBranch)
-          ]
-        )
+    parallel {
+      stage('miniconda-cuda Test Build') {
+        steps {
+          build(
+            job: 'gpuci/gpuci-build-environment/miniconda-cuda-test-build',
+            wait: true,
+            propagate: true,
+            parameters: [
+              string(name: 'PR_ID', value: env.CHANGE_ID),
+              string(name: 'REPORT_HASH', value: env.GIT_COMMIT),
+              string(name: 'COMMIT_HASH', value: env.GIT_COMMIT),
+              string(name: 'SOURCE_BRANCH', value: env.CHANGE_BRANCH),
+              string(name: 'TARGET_BRANCH', value: env.CHANGE_TARGET)
+            ]
+          )
+        }
+      }
+      stage('miniforge-cuda Test Build') {
+        steps {
+          build(
+            job: 'gpuci/gpuci-build-environment/miniforge-cuda-test-build',
+            wait: true,
+            propagate: true,
+            parameters: [
+              string(name: 'PR_ID', value: env.CHANGE_ID),
+              string(name: 'REPORT_HASH', value: env.GIT_COMMIT),
+              string(name: 'COMMIT_HASH', value: env.GIT_COMMIT),
+              string(name: 'SOURCE_BRANCH', value: env.CHANGE_BRANCH),
+              string(name: 'TARGET_BRANCH', value: env.CHANGE_TARGET)
+            ]
+          )
+        }
       }
     }
   }
